@@ -1,0 +1,9 @@
+[package]
+name = "pipedream"
+version = "0.1.0"
+authors = ["Björn Löfroth <bjorn.lofroth@ffcg.se>"]
+
+[dependencies]
+rocket = "0.3.2"
+rocket_codegen = "0.3.2"
+reqwest = "0.7.3"
