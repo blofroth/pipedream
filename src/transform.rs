@@ -2,9 +2,6 @@ use std::io::{BufReader, Read, BufRead};
 use std::io;
 use std::cmp;
 
-use rocket::{Data};
-use rocket::data::DataStream;
-
 pub trait LinesTransform {
     fn transform(&mut self, line: &String) -> TfResult;
 }
@@ -15,18 +12,18 @@ pub enum TfResult {
     Stop
 }
 
-pub struct LinesTransformer<T: LinesTransform> {
-    reader: BufReader<DataStream>,
+pub struct LinesTransformer<T: LinesTransform, I: Read> {
+    reader: BufReader<I>,
     finished: bool,
     curr_line: String,
     num_read: usize,
     transform: T
 }
 
-impl<T: LinesTransform> LinesTransformer<T> {
-    pub fn new(data: Data, transform: T) -> LinesTransformer<T> {
+impl<T: LinesTransform, I: Read> LinesTransformer<T, I> {
+    pub fn new(input: I, transform: T) -> LinesTransformer<T, I> {
         LinesTransformer {
-            reader: BufReader::new(data.open()),
+            reader: BufReader::new(input),
             finished: false,
             curr_line: String::new(),
             num_read: 0,
@@ -57,7 +54,7 @@ impl<T: LinesTransform> LinesTransformer<T> {
     }
 }
 
-impl <T: LinesTransform> Read for LinesTransformer<T> {
+impl <T: LinesTransform, I: Read> Read for LinesTransformer<T, I> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         while !self.finished && self.num_read == self.curr_line.len() {
             self.refill()?;

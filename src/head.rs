@@ -1,16 +1,20 @@
 use transform::{LinesTransformer, LinesTransform, TfResult};
-use rocket::response::Stream;
-use rocket::{Data};
+use std::io::{Read};
 
 #[derive(FromForm)]
 pub struct HeadOptions {
     n: u64
 }
 
-pub fn head_tf(input: Data, options: HeadOptions) -> Result<Stream<LinesTransformer<HeadTransform>>, String>  {
-    let tf = LinesTransformer::new(input, 
-                HeadTransform::new(options));
-    Ok(Stream::from(tf))
+pub fn head_tf<I: Read>(input: I, options: HeadOptions) -> LinesTransformer<HeadTransform, I> {
+    LinesTransformer::new(input, HeadTransform::new(options))
+}
+
+pub fn head_client<I: Read>(input: I, arguments: Option<&str>) -> Result<LinesTransformer<HeadTransform, I>, String> {
+    let n: u64 = arguments.ok_or("n not specified")?
+                    .parse().map_err(|e| format!("{:?}", e))?;
+                    
+    Ok(head_tf(input, HeadOptions { n: n }))
 }
 
 pub struct HeadTransform {

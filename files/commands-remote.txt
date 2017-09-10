@@ -1,0 +1,2 @@
+wget?https://en.wikipedia.org/wiki/Pipeline_(Unix)
+head?20
