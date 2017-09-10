@@ -52,15 +52,14 @@ impl CutTransform {
 
 impl LinesTransform for CutTransform {
     fn transform(&mut self, line: &String) -> TfResult {
-        println!("{:?}", line);
         let enumerated = line
             .split(&self.delimiter)
             .enumerate();
 
         let mut wanted_parts = enumerated
             // indices start at 1
-            .filter( |&(i, part)| self.fields.contains(&(i + 1)) )
-            .map( |(i, part)| part);
+            .filter( |&(i, _)| self.fields.contains(&(i + 1)) )
+            .map( |(_, part)| part);
 
         let put_together = wanted_parts.join(&self.delimiter);
 

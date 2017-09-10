@@ -48,7 +48,8 @@ impl<T: LinesTransform, I: Read> LinesTransformer<T, I> {
                         }
                     }
                     TfResult::Skip => {
-                        // leave num read and curr_line as is
+                        self.curr_line.clear();
+                        self.num_read = 0;
                     },
                     TfResult::Stop => {
                         self.finished = true;

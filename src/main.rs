@@ -5,11 +5,13 @@
 extern crate rocket;
 extern crate reqwest;
 extern crate itertools;
+extern crate regex;
 
 mod transform;
 mod head;
 mod wget;
 mod cut;
+mod grep;
 
 use rocket::{Data};
 use rocket::data::DataStream;
@@ -19,6 +21,7 @@ use transform::{LinesTransformer};
 use wget::{WgetOptions};
 use head::{HeadOptions, HeadTransform};
 use cut::{CutOptions, CutTransform};
+use grep::{GrepOptions, GrepTransform};
 
 use std::io::{Cursor};
 use std::io::{Read};
@@ -52,6 +55,12 @@ fn cut(input: Data, options: CutOptions) ->
     Ok(Stream::from(cut::cut_tf(input.open(), options)?))
 }
 
+#[post("/grep?<options>", data = "<input>")]
+fn grep(input: Data, options: GrepOptions) -> 
+    Result<Stream<LinesTransformer<GrepTransform, DataStream>>, String> {
+    Ok(Stream::from(grep::grep_tf(input.open(), options)?))
+}
+
 #[post("/cat", data = "<input>")]
 fn cat(input: Data) -> Result<Stream<DataStream>, String> {
     Ok(Stream::from(input.open()))
@@ -73,6 +82,10 @@ fn pipe(input: String) -> Result<Stream<Box<Read>>, String> {
                 Some("cut") => {
                     let input = prev_response.ok_or("no previous response to pipe")?;
                     Box::new(cut::cut_client(input, parts.next())?)
+                },
+                Some("grep") => {
+                    let input = prev_response.ok_or("no previous response to pipe")?;
+                    Box::new(grep::grep_client(input, parts.next())?)
                 },
                 _ => return Err(format!("Unknown command: {:?}", command)) 
             };
@@ -98,6 +111,7 @@ fn main() {
             wget, 
             head,
             cut,
+            grep,
             cat,
             pipe
         ]
