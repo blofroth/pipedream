@@ -4,22 +4,25 @@
 
 extern crate rocket;
 extern crate reqwest;
+extern crate itertools;
 
 mod transform;
 mod head;
 mod wget;
+mod cut;
 
 use rocket::{Data};
 use rocket::data::DataStream;
 use rocket::response::{Stream, NamedFile};
+
+use transform::{LinesTransformer};
 use wget::{WgetOptions};
 use head::{HeadOptions, HeadTransform};
-use transform::{LinesTransformer};
+use cut::{CutOptions, CutTransform};
+
 use std::io::{Cursor};
 use std::io::{Read};
 use std::path::{PathBuf, Path};
-
-const BASE_URL: &'static str = "http://localhost:8000/";
 
 #[get("/")]
 fn index() -> &'static str {
@@ -41,6 +44,12 @@ fn wget(options: WgetOptions) ->
 fn head(input: Data, options: HeadOptions) -> 
     Result<Stream<LinesTransformer<HeadTransform, DataStream>>, String> {
     Ok(Stream::from(head::head_tf(input.open(), options)))
+}
+
+#[post("/cut?<options>", data = "<input>")]
+fn cut(input: Data, options: CutOptions) -> 
+    Result<Stream<LinesTransformer<CutTransform, DataStream>>, String> {
+    Ok(Stream::from(cut::cut_tf(input.open(), options)?))
 }
 
 #[post("/cat", data = "<input>")]
@@ -84,6 +93,7 @@ fn main() {
             files,
             wget, 
             head,
+            cut,
             cat,
             pipe
         ]

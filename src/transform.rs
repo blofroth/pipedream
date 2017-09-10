@@ -34,11 +34,18 @@ impl<T: LinesTransform, I: Read> LinesTransformer<T, I> {
     fn refill(&mut self) -> io::Result<()> {
         self.curr_line.clear();
         match self.reader.read_line(&mut self.curr_line) {
+            Ok(0) => {
+                self.finished = true;
+                Ok(())
+            },
             Ok(_) => {       
                 match self.transform.transform(&self.curr_line) {
                     TfResult::Yield(line) => {
                         self.num_read = 0;
                         self.curr_line = line;
+                        if !self.curr_line.ends_with("\n") {
+                            self.curr_line.push('\n');
+                        }
                     }
                     TfResult::Skip => {
                         // leave num read and curr_line as is

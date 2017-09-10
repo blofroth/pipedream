@@ -3,6 +3,7 @@ use std::io::{Read};
 
 #[derive(FromForm)]
 pub struct HeadOptions {
+    /// number of lines to keep
     n: u64
 }
 
@@ -13,7 +14,7 @@ pub fn head_tf<I: Read>(input: I, options: HeadOptions) -> LinesTransformer<Head
 pub fn head_client<I: Read>(input: I, arguments: Option<&str>) -> Result<LinesTransformer<HeadTransform, I>, String> {
     let n: u64 = arguments.ok_or("n not specified")?
                     .parse().map_err(|e| format!("{:?}", e))?;
-                    
+
     Ok(head_tf(input, HeadOptions { n: n }))
 }
 
