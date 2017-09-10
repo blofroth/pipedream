@@ -65,11 +65,15 @@ fn pipe(input: String) -> Result<Stream<Box<Read>>, String> {
             let mut parts = line.split("?");
             let command = parts.next();
             let new_response: Box<Read> = match command {
+                Some("wget") => Box::new(wget::wget_client(parts.next())?),
                 Some("head") => {
                     let input = prev_response.ok_or("no previous response to pipe")?;
                     Box::new(head::head_client(input, parts.next())?)
                 },
-                Some("wget") => Box::new(wget::wget_client(parts.next())?),
+                Some("cut") => {
+                    let input = prev_response.ok_or("no previous response to pipe")?;
+                    Box::new(cut::cut_client(input, parts.next())?)
+                },
                 _ => return Err(format!("Unknown command: {:?}", command)) 
             };
             prev_response = Some(new_response);

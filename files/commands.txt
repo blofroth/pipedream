@@ -1,2 +1,3 @@
-wget?http://localhost:8000/files/lines.txt
-head?2
+wget?http://localhost:8000/files/columns.txt
+cut?2,4
+head?4
