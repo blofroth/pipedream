@@ -6,22 +6,18 @@ extern crate rocket;
 extern crate reqwest;
 extern crate itertools;
 extern crate regex;
-
-mod transform;
-mod head;
-mod wget;
-mod cut;
-mod grep;
+extern crate pipedream;
 
 use rocket::{Data};
 use rocket::data::DataStream;
 use rocket::response::{Stream, NamedFile};
 
-use transform::{LinesTransformer};
-use wget::{WgetOptions};
-use head::{HeadOptions, HeadTransform};
-use cut::{CutOptions, CutTransform};
-use grep::{GrepOptions, GrepTransform};
+use pipedream::{transform, wget, head, cut, grep};
+use pipedream::transform::{LinesTransformer};
+use pipedream::wget::{WgetOptions};
+use pipedream::head::{HeadOptions, HeadTransform};
+use pipedream::cut::{CutOptions, CutTransform};
+use pipedream::grep::{GrepOptions, GrepTransform};
 
 use std::io::{Cursor};
 use std::io::{Read};

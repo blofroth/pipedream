@@ -1,0 +1,16 @@
+* Rustfmt
+* Clippy
+* Build separate binaries
+* Client over network
+    * wget to take input? also supports it in theory
+        * some flag --post-data
+
+* single_char_pattern bug?
+46 |                         if !self.curr_line.ends_with("\n") {
+   |                             -------------------------^^^^- help: try using a char instead: `self.curr_line.ends_with("\n")`
+    * correct sometimes
+73 |         if line.contains("?") {
+   |            --------------^^^- help: try using a char instead: `line.contains('?')`
+
+bad replace?
+let hint = snippet(cx, expr.span, "..").replace(&format!("\"{}\"", r), &format!("'{}'", r));

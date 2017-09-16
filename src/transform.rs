@@ -3,7 +3,7 @@ use std::io;
 use std::cmp;
 
 pub trait LinesTransform {
-    fn transform(&mut self, line: &String) -> TfResult;
+    fn transform(&mut self, line: &str) -> TfResult;
 }
 
 pub enum TfResult {
@@ -43,7 +43,7 @@ impl<T: LinesTransform, I: Read> LinesTransformer<T, I> {
                     TfResult::Yield(line) => {
                         self.num_read = 0;
                         self.curr_line = line;
-                        if !self.curr_line.ends_with("\n") {
+                        if !self.curr_line.ends_with('\n') {
                             self.curr_line.push('\n');
                         }
                     }

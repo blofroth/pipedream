@@ -33,12 +33,12 @@ impl HeadTransform {
 }
 
 impl LinesTransform for HeadTransform {
-    fn transform(&mut self, line: &String) -> TfResult {
+    fn transform(&mut self, line: &str) -> TfResult {
         self.num_processed += 1;
         if self.num_processed > self.limit {
             TfResult::Stop
         } else {
-            TfResult::Yield(line.clone())
+            TfResult::Yield(String::from(line))
         }
     }
 }

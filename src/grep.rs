@@ -35,9 +35,9 @@ impl GrepTransform {
 }
 
 impl LinesTransform for GrepTransform {
-    fn transform(&mut self, line: &String) -> TfResult {
+    fn transform(&mut self, line: &str) -> TfResult {
         if self.re.is_match(line) {
-            TfResult::Yield(line.clone())
+            TfResult::Yield(String::from(line))
         } else {
             TfResult::Skip
         }

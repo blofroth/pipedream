@@ -51,7 +51,7 @@ impl CutTransform {
 }
 
 impl LinesTransform for CutTransform {
-    fn transform(&mut self, line: &String) -> TfResult {
+    fn transform(&mut self, line: &str) -> TfResult {
         let enumerated = line
             .split(&self.delimiter)
             .enumerate();
