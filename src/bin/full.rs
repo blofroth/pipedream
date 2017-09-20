@@ -4,22 +4,19 @@
 
 extern crate rocket;
 extern crate reqwest;
-extern crate itertools;
-extern crate regex;
 extern crate pipedream;
 
 use rocket::{Data};
 use rocket::data::DataStream;
 use rocket::response::{Stream, NamedFile};
 
-use pipedream::{transform, wget, head, cut, grep};
+use pipedream::{wget, head, cut, grep, pipe};
 use pipedream::transform::{LinesTransformer};
 use pipedream::wget::{WgetOptions};
 use pipedream::head::{HeadOptions, HeadTransform};
 use pipedream::cut::{CutOptions, CutTransform};
 use pipedream::grep::{GrepOptions, GrepTransform};
 
-use std::io::{Cursor};
 use std::io::{Read};
 use std::path::{PathBuf, Path};
 
@@ -64,39 +61,7 @@ fn cat(input: Data) -> Result<Stream<DataStream>, String> {
 
 #[post("/pipe", data = "<input>")]
 fn pipe(input: String) -> Result<Stream<Box<Read>>, String> {
-    let mut prev_response: Option<Box<Read>> = None;
-    for line in input.lines() {
-        if line.contains("?") {
-            let mut parts = line.split("?");
-            let command = parts.next();
-            let new_response: Box<Read> = match command {
-                Some("wget") => Box::new(wget::wget_client(parts.next())?),
-                Some("head") => {
-                    let input = prev_response.ok_or("no previous response to pipe")?;
-                    Box::new(head::head_client(input, parts.next())?)
-                },
-                Some("cut") => {
-                    let input = prev_response.ok_or("no previous response to pipe")?;
-                    Box::new(cut::cut_client(input, parts.next())?)
-                },
-                Some("grep") => {
-                    let input = prev_response.ok_or("no previous response to pipe")?;
-                    Box::new(grep::grep_client(input, parts.next())?)
-                },
-                _ => return Err(format!("Unknown command: {:?}", command)) 
-            };
-            prev_response = Some(new_response);
-        }
-    }
-
-    match prev_response {
-        Some(readable) => Ok(Stream::from(readable)),
-        None => {
-            let empty_vec: Vec<u8> = Vec::new();
-            let read: Box<Read> = Box::new(Cursor::new(empty_vec));
-            Ok(Stream::from(read))
-        }
-    }
+    Ok(Stream::from(pipe::pipe(input)?))
 }
 
 fn main() {

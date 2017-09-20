@@ -2,6 +2,9 @@ use transform::{LinesTransformer, LinesTransform, TfResult};
 use std::io::{Read};
 use itertools::Itertools;
 
+use common::ArgParsable;
+use getopts::{Options, Matches};
+
 #[derive(FromForm)]
 pub struct CutOptions {
     /// delimiter
@@ -10,14 +13,29 @@ pub struct CutOptions {
     f: String
 }
 
+impl ArgParsable for CutOptions {
+    fn options_defs() -> Options {
+        let mut opts = Options::new();
+        opts.reqopt("f", "", "fields - comma separated set of numbers", "list");
+        opts.optopt("d", "", "delimiter", "delim");
+
+        opts
+    }
+
+    fn parse_matches(matches: Matches) -> Result<Self, String> {
+        Ok(CutOptions {
+            f: matches.opt_str("f").unwrap(),
+            d: matches.opt_str("d")
+        })
+    }
+}
+
 pub fn cut_tf<I: Read>(input: I, options: CutOptions) -> Result<LinesTransformer<CutTransform, I>, String> {
     Ok(LinesTransformer::new(input, CutTransform::new(options)?))
 }
 
-pub fn cut_client<I: Read>(input: I, arguments: Option<&str>) -> Result<LinesTransformer<CutTransform, I>, String> {
-    let fields_arg = arguments.ok_or("fields are not specified")?;
-                    
-    cut_tf(input, CutOptions { d: None,  f: fields_arg.to_string() })
+pub fn cut_client<I: Read>(input: I, arguments: &str) -> Result<LinesTransformer<CutTransform, I>, String> {
+    cut_tf(input, CutOptions::from_args(arguments)?)
 }
 
 pub struct CutTransform {
@@ -33,7 +51,7 @@ fn parse_fields(fields_arg: String) -> Result<Vec<usize>, String> {
         .partition(Result::is_ok);
     
     if !fails.is_empty() {
-        return Err(format!("could not parse some field indices: {:?}", fails))
+        return Err(format!("could not parse some field indices: {:?} ({})", fails, fields_arg))
     }
     Ok(oks.into_iter()
         .filter_map(Result::ok)

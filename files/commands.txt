@@ -1,5 +1,5 @@
-wget?http://localhost:8000/files/columns.txt
-head?4
-grep?c3
-cut?2,4
-head?3
+wget http://localhost:8000/files/columns.txt
+head -n 4
+grep -i C3
+cut -f 2,4
+head -n 3
