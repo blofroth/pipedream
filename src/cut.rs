@@ -1,11 +1,10 @@
-use transform::{LinesTransformer, LinesTransform, TfResult};
-use std::io::{Read};
+use transform::{LinesTransformer, LinesTransform, TfResult, CharStream, Command};
 use itertools::Itertools;
 
 use common::ArgParsable;
 use getopts::{Options, Matches};
 
-#[derive(FromForm)]
+#[derive(FromForm, Serialize)]
 pub struct CutOptions {
     /// delimiter
     d: Option<String>,
@@ -30,12 +29,23 @@ impl ArgParsable for CutOptions {
     }
 }
 
-pub fn cut_tf<I: Read>(input: I, options: CutOptions) -> Result<LinesTransformer<CutTransform, I>, String> {
-    Ok(LinesTransformer::new(input, CutTransform::new(options)?))
+impl Command for CutOptions {
+    fn name(&self) -> String {
+        "cut".to_string()
+    }
+
+    fn execute_local(&self, input: CharStream) -> Result<CharStream, String> {
+        Ok(Box::new(LinesTransformer::new(input, CutTransform::new(&self)?)))
+    }
 }
 
-pub fn cut_client<I: Read>(input: I, arguments: &str) -> Result<LinesTransformer<CutTransform, I>, String> {
-    cut_tf(input, CutOptions::from_args(arguments)?)
+pub fn cut_tf(input: CharStream, options: CutOptions) -> Result<CharStream, String> {
+    Ok(Box::new(LinesTransformer::new(input, CutTransform::new(&options)?)))
+}
+
+pub fn cut_client(input: CharStream, arguments: &str) -> Result<CharStream, String> {
+    let options = CutOptions::from_args(arguments)?;
+    Ok(cut_tf(input, options)?)
 }
 
 pub struct CutTransform {
@@ -43,7 +53,19 @@ pub struct CutTransform {
     fields: Vec<usize>
 }
 
-fn parse_fields(fields_arg: String) -> Result<Vec<usize>, String> {
+impl CutTransform {
+    fn new(options: &CutOptions) -> Result<CutTransform, String> {
+        let fields = parse_fields(&options.f)?;
+        let o = options.d.clone();
+        let delim = o.unwrap_or("\t".to_string());
+        Ok(CutTransform {
+            delimiter: delim,
+            fields: fields
+        })
+    }
+}
+
+fn parse_fields(fields_arg: &str) -> Result<Vec<usize>, String> {
 
     let (oks, fails): (Vec<_>, Vec<_>) = fields_arg
         .split(",")
@@ -56,16 +78,6 @@ fn parse_fields(fields_arg: String) -> Result<Vec<usize>, String> {
     Ok(oks.into_iter()
         .filter_map(Result::ok)
         .collect())
-}
-
-impl CutTransform {
-    fn new(options: CutOptions) -> Result<CutTransform, String> {
-        let fields = parse_fields(options.f)?;
-        Ok(CutTransform {
-            delimiter: options.d.unwrap_or("\t".to_string()),
-            fields: fields
-        })
-    }
 }
 
 impl LinesTransform for CutTransform {

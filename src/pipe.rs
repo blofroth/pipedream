@@ -1,10 +1,16 @@
 
-use {wget, head, cut, grep};
-use std::io::{Cursor};
-use std::io::{Read};
+use common::{ArgParsable};
+use remote::RemoteClient;
+use transform::{Command, CharStream, empty_stream};
+use head::HeadOptions;
+use cut::CutOptions;
+use grep::GrepOptions;
+use wget::WgetOptions;
 
-pub fn pipe(input: String) -> Result<Box<Read>, String> {
-    let mut prev_response: Box<Read> = empty_stream();
+pub fn pipe(input: String) -> Result<CharStream, String> {
+    let mut prev_response: CharStream = empty_stream();
+    
+    let client = RemoteClient::new();
 
     for line in input.lines() {
         let mut parts = line.split(" ");
@@ -12,23 +18,30 @@ pub fn pipe(input: String) -> Result<Box<Read>, String> {
         let args_parts: Vec<_> = parts.collect();
         let args = args_parts.join(" ");
 
-        println!("{:?}", command);
-
-        let new_response: Box<Read> = match command {
-            "wget" => Box::new(wget::wget_client(&args)?),
-            "head" => Box::new(head::head_client(prev_response, &args)?),
-            "cut" => Box::new(cut::cut_client(prev_response, &args)?),
-            "grep" => Box::new(grep::grep_client(prev_response, &args)?),
-            _ => return Err(format!("Unknown command: {:?}", command)) 
-        };
-        prev_response = new_response;
+        println!("{} {}", command, args);
+        let remote = false;
+        prev_response = execute(prev_response, command, &args, &client, remote)?;
     }
 
     Ok(prev_response)
 }
 
-// TODO: impl LinesTransform for pipe
-
-fn empty_stream() -> Box<Read> {
-    Box::new(Cursor::new(Vec::new()))
+fn execute(input: CharStream, command_name: &str, args: &str, client: &RemoteClient, remote: bool) -> Result<CharStream, String> {
+    match command_name {
+        "wget" => WgetOptions::from_args(&args)?
+                    .execute(input, false, client),
+        "head" => HeadOptions::from_args(&args)?
+                    .execute(input, remote, client),
+        "cut" =>  CutOptions::from_args(&args)?
+                    .execute(input, remote, client),
+        "grep" => GrepOptions::from_args(&args)?
+                    .execute(input, remote, client),
+        _ => return Err(format!("Unknown command: {:?}", command_name)) 
+    }
 }
+
+// TODO: impl LinesTransform for pipe
+// should be able to work in two modes? 
+// * read commands from stdin
+// * read commands as options, piping stdin to first command 
+//      * need to parse pipes, -p p1 -p p2 ? quoting? query strings? 

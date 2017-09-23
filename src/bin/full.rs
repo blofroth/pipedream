@@ -11,13 +11,12 @@ use rocket::data::DataStream;
 use rocket::response::{Stream, NamedFile};
 
 use pipedream::{wget, head, cut, grep, pipe};
-use pipedream::transform::{LinesTransformer};
+use pipedream::transform::{empty_stream, CharStream};
 use pipedream::wget::{WgetOptions};
-use pipedream::head::{HeadOptions, HeadTransform};
-use pipedream::cut::{CutOptions, CutTransform};
-use pipedream::grep::{GrepOptions, GrepTransform};
+use pipedream::head::{HeadOptions};
+use pipedream::cut::{CutOptions};
+use pipedream::grep::{GrepOptions};
 
-use std::io::{Read};
 use std::path::{PathBuf, Path};
 
 #[get("/")]
@@ -33,25 +32,25 @@ fn files(file: PathBuf) -> Option<NamedFile> {
 #[get("/wget?<options>")]
 fn wget(options: WgetOptions) -> 
     Result<Stream<reqwest::Response>, String> {
-    wget::wget(options).map(|r| Stream::from(r))
+    wget::wget_tf(empty_stream(), &options).map(|r| Stream::from(r))
 }
 
 #[post("/head?<options>", data = "<input>")]
 fn head(input: Data, options: HeadOptions) -> 
-    Result<Stream<LinesTransformer<HeadTransform, DataStream>>, String> {
-    Ok(Stream::from(head::head_tf(input.open(), options)))
+    Result<Stream<CharStream>, String> {
+    Ok(Stream::from(head::head_tf(Box::new(input.open()), options)))
 }
 
 #[post("/cut?<options>", data = "<input>")]
 fn cut(input: Data, options: CutOptions) -> 
-    Result<Stream<LinesTransformer<CutTransform, DataStream>>, String> {
-    Ok(Stream::from(cut::cut_tf(input.open(), options)?))
+    Result<Stream<CharStream>, String> {
+    Ok(Stream::from(cut::cut_tf(Box::new(input.open()), options)?))
 }
 
 #[post("/grep?<options>", data = "<input>")]
 fn grep(input: Data, options: GrepOptions) -> 
-    Result<Stream<LinesTransformer<GrepTransform, DataStream>>, String> {
-    Ok(Stream::from(grep::grep_tf(input.open(), options)?))
+    Result<Stream<CharStream>, String> {
+    Ok(Stream::from(grep::grep_tf(Box::new(input.open()), options)?))
 }
 
 #[post("/cat", data = "<input>")]
@@ -60,7 +59,7 @@ fn cat(input: Data) -> Result<Stream<DataStream>, String> {
 }
 
 #[post("/pipe", data = "<input>")]
-fn pipe(input: String) -> Result<Stream<Box<Read>>, String> {
+fn pipe(input: String) -> Result<Stream<CharStream>, String> {
     Ok(Stream::from(pipe::pipe(input)?))
 }
 

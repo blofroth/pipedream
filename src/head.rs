@@ -1,10 +1,9 @@
-use transform::{LinesTransformer, LinesTransform, TfResult};
-use std::io::{Read};
+use transform::{LinesTransformer, LinesTransform, TfResult, CharStream, Command};
 
 use common::ArgParsable;
 use getopts::{Options, Matches};
 
-#[derive(FromForm)]
+#[derive(FromForm, Serialize)]
 pub struct HeadOptions {
     /// number of lines to keep
     n: u64
@@ -26,12 +25,23 @@ impl ArgParsable for HeadOptions {
     }
 }
 
-pub fn head_tf<I: Read>(input: I, options: HeadOptions) -> LinesTransformer<HeadTransform, I> {
-    LinesTransformer::new(input, HeadTransform::new(options))
+impl Command for HeadOptions {
+    fn name(&self) -> String {
+        "head".to_string()
+    }
+
+    fn execute_local(&self, input: CharStream) -> Result<CharStream, String> {
+        Ok(Box::new(LinesTransformer::new(input, HeadTransform::new(&self))))
+    }
 }
 
-pub fn head_client<I: Read>(input: I, arguments: &str) -> Result<LinesTransformer<HeadTransform, I>, String> {
-    Ok(head_tf(input, HeadOptions::from_args(arguments)?))
+pub fn head_tf(input: CharStream, options: HeadOptions) -> CharStream {
+    Box::new(LinesTransformer::new(input, HeadTransform::new(&options)))
+}
+
+pub fn head_client(input: CharStream, arguments: &str) -> Result<CharStream, String> {
+    let options = HeadOptions::from_args(arguments)?;
+    Ok(head_tf(input, options))
 }
 
 pub struct HeadTransform {
@@ -40,7 +50,7 @@ pub struct HeadTransform {
 }
 
 impl HeadTransform {
-    fn new(options: HeadOptions) -> HeadTransform {
+    fn new(options: &HeadOptions) -> HeadTransform {
         HeadTransform {
             num_processed: 0,
             limit: options.n

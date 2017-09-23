@@ -1,11 +1,10 @@
-use transform::{LinesTransformer, LinesTransform, TfResult};
-use std::io::{Read};
+use transform::{LinesTransformer, LinesTransform, TfResult, CharStream, Command};
 use regex::{Regex, RegexBuilder};
 
 use common::ArgParsable;
 use getopts::{Options, Matches};
 
-#[derive(FromForm)]
+#[derive(FromForm, Serialize)]
 pub struct GrepOptions {
     /// pattern to match against lines
     pattern: String,
@@ -37,12 +36,24 @@ impl ArgParsable for GrepOptions {
     }
 }
 
-pub fn grep_tf<I: Read>(input: I, options: GrepOptions) -> Result<LinesTransformer<GrepTransform, I>, String> {
-    Ok(LinesTransformer::new(input, GrepTransform::new(options)?))
+impl Command for GrepOptions {
+    fn name(&self) -> String {
+        "grep".to_string()
+    }
+
+    fn execute_local(&self, input: CharStream) -> Result<CharStream, String> {
+        Ok(Box::new(LinesTransformer::new(input, GrepTransform::new(&self)?)))
+    }
 }
 
-pub fn grep_client<I: Read>(input: I, arguments: &str) -> Result<LinesTransformer<GrepTransform, I>, String> {
-    grep_tf(input, GrepOptions::from_args(arguments)? )
+
+pub fn grep_tf(input: CharStream, options: GrepOptions) -> Result<CharStream, String> {
+    Ok(Box::new(LinesTransformer::new(input, GrepTransform::new(&options)?)))
+}
+
+pub fn grep_client(input: CharStream, arguments: &str) -> Result<CharStream, String> {
+    let options = GrepOptions::from_args(arguments)?;
+    Ok(grep_tf(input, options)?)
 }
 
 pub struct GrepTransform {
@@ -50,7 +61,7 @@ pub struct GrepTransform {
 }
 
 impl GrepTransform {
-    fn new(options: GrepOptions) -> Result<GrepTransform, String> {
+    fn new(options: &GrepOptions) -> Result<GrepTransform, String> {
         Ok(GrepTransform {
             re: RegexBuilder::new(&options.pattern)
                     .case_insensitive(options.i.unwrap_or(false))

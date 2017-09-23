@@ -1,23 +1,32 @@
-use reqwest::StatusCode;
-use reqwest::Response;
+use reqwest::{Response, Client, Body, StatusCode};
 use reqwest;
 use common::ArgParsable;
 use getopts::{Options, Matches};
+use transform::{Command, CharStream};
 
-#[derive(FromForm)]
+pub const DEFAULT_LOCAL_BASE_URL: &str = "http://localhost:8000/";
+
+#[derive(FromForm, Serialize)]
 pub struct WgetOptions {
-    url: String
+    /// url to call
+    pub url: String,
+    /// whether to use stdin as post data, and make a post request
+    pub post_data: Option<bool>
 }
 
 impl ArgParsable for WgetOptions {
     fn options_defs() -> Options {
-        // only positional for now
-        Options::new()
+        let mut opts = Options::new();
+        opts.optflag("", "post-data", "whether to use stdin as post data");
+        opts
     }
 
     fn parse_matches(matches: Matches) -> Result<Self, String> {
         if matches.free.len() == 1 {
-            Ok(WgetOptions { url: matches.free[0].clone() })
+            Ok(WgetOptions { 
+                url: matches.free[0].clone(), 
+                post_data: Some(matches.opt_present("post-data"))
+            })
         } else {
             Err("requires (only) URL".to_string())
         }
@@ -28,9 +37,30 @@ impl ArgParsable for WgetOptions {
     }
 }
 
-pub fn wget(options: WgetOptions) -> Result<Response, String> {
-    let resp = reqwest::get(&options.url)
-        .map_err(|e| e.to_string())?;
+impl Command for WgetOptions {
+    fn name(&self) -> String {
+        "wget".to_string()
+    }
+
+    fn execute_local(&self, input: CharStream) -> Result<CharStream, String> {
+        Ok(Box::new(wget_tf(input, self)?))
+    }
+}
+
+pub fn wget_tf(input: CharStream, options: &WgetOptions) -> Result<Response, String> {
+    let resp = if options.post_data.is_some() && options.post_data.unwrap() {
+        let client = Client::new()
+                        .map_err(|e| e.to_string())?;
+                        
+        client.post(&options.url)
+                .map_err(|e| e.to_string())?
+            .body(Body::new(input))
+            .send()
+                .map_err(|e| e.to_string())?
+    } else {
+        reqwest::get(&options.url)
+            .map_err(|e| e.to_string())?
+    };
 
     match resp.status() {
         StatusCode::Ok => Ok(resp),
@@ -38,6 +68,6 @@ pub fn wget(options: WgetOptions) -> Result<Response, String> {
     }
 }
 
-pub fn wget_client(arguments: &str) -> Result<Response, String> {
-    wget(WgetOptions::from_args(arguments)?)
+pub fn wget_client(input: CharStream, arguments: &str) -> Result<Response, String> {
+    wget_tf(input, &WgetOptions::from_args(arguments)?)
 }

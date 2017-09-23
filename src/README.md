@@ -6,7 +6,7 @@ that lends themselves to composability by piping (head, grep, cut, tr, sed, sort
 ## Goals 
 
 The main goal is for me to learn Rust better :). Apart from that some directions that can be explored are:
-* Can web services achieve a similar level of composeability as UNIX commands?
+* Can web services achieve a similar level of composability as UNIX commands?
   * Is that even desirable from a performance point of view?
 * Be a test bed for cloud orchestration tools (OpenShift/Kubernetes), scaling, rolling deploys
 
@@ -14,7 +14,7 @@ Limitations:
 * UTF-8 input and output
 
 Non-goals:
-* Achieve any sort of feature completeness of the UNIX command equivalents
+* Achieve any sort of feature completeness with the UNIX command equivalents
 * Aim to solve any particular problem in the best way
 * Be appropriate to deploy in any environment where malicious users are present
 
@@ -31,7 +31,7 @@ to the `wget` command in case you have a slow internet connection or a lack of i
 
 Start the server:
 
-    cargo run 
+    cargo run --bin full
 
 Post some commands:
 
