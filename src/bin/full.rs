@@ -10,7 +10,7 @@ use rocket::{Data};
 use rocket::data::DataStream;
 use rocket::response::{Stream, NamedFile};
 
-use pipedream::{wget, head, cut, grep, pipe};
+use pipedream::{wget, head, cut, grep, pipe, cat};
 use pipedream::transform::{empty_stream, CharStream};
 use pipedream::wget::{WgetOptions};
 use pipedream::head::{HeadOptions};
@@ -22,11 +22,6 @@ use std::path::{PathBuf, Path};
 #[get("/")]
 fn index() -> &'static str {
     "This is a dream of pipes"
-}
-
-#[get("/files/<file..>")]
-fn files(file: PathBuf) -> Option<NamedFile> {
-    NamedFile::open(Path::new("files/").join(file)).ok()
 }
 
 #[get("/wget?<options>")]
@@ -53,8 +48,18 @@ fn grep(input: Data, options: GrepOptions) ->
     Ok(Stream::from(grep::grep_tf(Box::new(input.open()), options)?))
 }
 
+#[get("/cat/<file..>")]
+fn cat_read(file: PathBuf) -> Option<NamedFile> {
+    NamedFile::open(Path::new(&*cat::CAT_FILES_PATH).join(file)).ok()
+}
+
+#[post("/cat/<dest_file..>", data = "<input>")]
+fn cat_write(dest_file: PathBuf, input: Data) -> Result<(), String> {
+    cat::cat_write(dest_file, &mut input.open())
+}
+
 #[post("/cat", data = "<input>")]
-fn cat(input: Data) -> Result<Stream<DataStream>, String> {
+fn cat_echo(input: Data) -> Result<Stream<DataStream>, String> {
     Ok(Stream::from(input.open()))
 }
 
@@ -66,13 +71,14 @@ fn pipe(input: String) -> Result<Stream<CharStream>, String> {
 fn main() {
     rocket::ignite().mount("/", 
         routes![
-            index, 
-            files,
+            index,
             wget, 
             head,
             cut,
             grep,
-            cat,
+            cat_read,
+            cat_write,
+            cat_echo,
             pipe
         ]
     ).launch();

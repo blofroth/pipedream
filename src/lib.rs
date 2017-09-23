@@ -22,5 +22,6 @@ pub mod wget;
 pub mod cut;
 pub mod grep;
 pub mod pipe;
+pub mod cat;
 pub mod common;
 pub mod remote;

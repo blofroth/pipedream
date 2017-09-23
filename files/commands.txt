@@ -1,4 +1,4 @@
-wget http://localhost:8000/files/columns.txt
+wget http://localhost:8000/cat/columns.txt
 head -n 4
 grep -i C3
 cut -f 2,4
