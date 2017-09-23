@@ -8,7 +8,7 @@ use transform::CharStream;
 
 lazy_static! {
     static ref REMOTE_BASE_URL: String = env::var("PIPEDREAM_REMOTE_URL")
-        .unwrap_or("http://localhost".to_string());
+        .unwrap_or("http://localhost:8000".to_string());
 }
 
 pub struct RemoteClient {

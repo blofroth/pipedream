@@ -19,7 +19,7 @@ pub fn pipe(input: String) -> Result<CharStream, String> {
         let args = args_parts.join(" ");
 
         println!("{} {}", command, args);
-        let remote = false;
+        let remote = true;
         prev_response = execute(prev_response, command, &args, &client, remote)?;
     }
 
