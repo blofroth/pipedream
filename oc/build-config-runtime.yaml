@@ -3,12 +3,12 @@ apiVersion: "v1"
 metadata:
   name: "pipedream" 
 spec:
-  triggers: 
-    # bad syntax?
-    #imageChange:
-    #  from:
-    #    kind: "ImageStreamTag"
-    #    name: "pipedream-artifact:latest"
+  triggers:
+    - type: ImageChange
+      imageChange:
+        from:
+          kind: ImageStreamTag
+          name: 'pipedream-artifact:latest'    
   source: 
     images: 
       - from: 
