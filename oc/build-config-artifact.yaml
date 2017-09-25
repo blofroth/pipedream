@@ -1,0 +1,31 @@
+kind: "BuildConfig"
+apiVersion: "v1"
+metadata:
+  name: "pipedream-artifact" 
+spec:
+  triggers: 
+    # - type: "ImageChange"
+    # also web hooks?
+  source: 
+    type: "Git"
+    git:
+      uri: "https://github.com/blofroth/pipedream"
+
+  strategy:
+    type: "Source"
+    sourceStrategy:
+      from:
+        kind: "ImageStreamTag"
+        name: "rust-musl:1.0" 
+      incremental: true
+      # forcePull: true
+      # scripts: "http://somehost.com/scripts_directory"
+      env:
+      #- name: "DISABLE_ASSET_COMPILATION"
+      #  value: "true"
+  output: 
+    to:
+      kind: "ImageStreamTag"
+      name: "pipedream-artifact:latest"
+  postCommit: 
+      script: "cargo test --release"

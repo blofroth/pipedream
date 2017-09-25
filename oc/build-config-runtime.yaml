@@ -1,0 +1,29 @@
+kind: "BuildConfig"
+apiVersion: "v1"
+metadata:
+  name: "pipedream" 
+spec:
+  triggers: 
+    # bad syntax?
+    #imageChange:
+    #  from:
+    #    kind: "ImageStreamTag"
+    #    name: "pipedream-artifact:latest"
+  source: 
+    images: 
+      - from: 
+          kind: ImageStreamTag
+          name: pipedream-artifact:latest
+        paths: 
+        - destinationDir: rust/ 
+          sourcePath: /home/rust/src/target/x86_64-unknown-linux-musl/release/pipedream
+    dockerfile: "FROM alpine:latest\nADD rust/pipedream /rust/pipedream\nCMD /rust/pipedream"
+  strategy:
+    dockerStrategy:
+      from:
+        kind: "ImageStreamTag"
+        name: "alpine:latest"
+  output: 
+    to:
+      kind: "ImageStreamTag"
+      name: "pipedream:latest"
