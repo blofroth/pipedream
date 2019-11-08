@@ -7,6 +7,7 @@ use cut::CutOptions;
 use grep::GrepOptions;
 use wget::WgetOptions;
 
+
 pub fn pipe(input: String) -> Result<CharStream, String> {
     let mut prev_response: CharStream = empty_stream();
     

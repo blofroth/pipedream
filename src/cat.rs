@@ -4,7 +4,7 @@ use std::io::prelude::*;
 use std::io::Read;
 use std::env;
 
-/// should not be considered secure
+// should not be considered secure
 lazy_static! {
     pub static ref CAT_WRITE_ENABLED: bool = env::var("PIPEDREAM_CAT_WRITE_ENABLED")
         .map(|s| s.parse())
@@ -31,7 +31,7 @@ pub fn cat_write<I: Read>(dest_file: PathBuf, input_stream: &mut I) -> Result<()
                 break;
             }
             file.write(&buf[..num_read])
-                .map_err(|e| format!("Could not write to file: {:?}", e))?;;
+                .map_err(|e| format!("Could not write to file: {:?}", e))?;
         }
         Ok(())
     } else {

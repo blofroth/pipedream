@@ -1,6 +1,6 @@
 use transform::{LinesTransformer, LinesTransform, TfResult, CharStream, Command};
 use itertools::Itertools;
-
+use rocket::request::FromForm;
 use common::ArgParsable;
 use getopts::{Options, Matches};
 

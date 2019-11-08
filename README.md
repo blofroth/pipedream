@@ -31,7 +31,7 @@ to the `wget` command in case you have a slow internet connection or a lack of i
 
 Start the server:
 
-    cargo run --bin full
+    cargo run --bin pipedream
 
 Post some commands:
 

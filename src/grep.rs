@@ -1,6 +1,6 @@
 use transform::{LinesTransformer, LinesTransform, TfResult, CharStream, Command};
 use regex::{Regex, RegexBuilder};
-
+use rocket::request::FromForm;
 use common::ArgParsable;
 use getopts::{Options, Matches};
 

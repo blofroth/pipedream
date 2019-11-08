@@ -7,7 +7,7 @@ use serde::Serialize;
 use rocket::data::DataStream;
 
 pub trait ReadSend : Read + Send + 'static {}
-pub type CharStream = Box<ReadSend>;
+pub type CharStream = Box<dyn ReadSend>;
 
 impl ReadSend for Response {}
 impl ReadSend for Cursor<Vec<u8>> {}

@@ -1,5 +1,5 @@
 use transform::{LinesTransformer, LinesTransform, TfResult, CharStream, Command};
-
+use rocket::request::FromForm;
 use common::ArgParsable;
 use getopts::{Options, Matches};
 

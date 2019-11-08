@@ -3,6 +3,7 @@ use reqwest;
 use common::ArgParsable;
 use getopts::{Options, Matches};
 use transform::{Command, CharStream};
+use rocket::request::FromForm;
 
 pub const DEFAULT_LOCAL_BASE_URL: &str = "http://localhost:8000/";
 
@@ -49,11 +50,9 @@ impl Command for WgetOptions {
 
 pub fn wget_tf(input: CharStream, options: &WgetOptions) -> Result<Response, String> {
     let resp = if options.post_data.is_some() && options.post_data.unwrap() {
-        let client = Client::new()
-                        .map_err(|e| e.to_string())?;
+        let client = Client::new();
                         
         client.post(&options.url)
-                .map_err(|e| e.to_string())?
             .body(Body::new(input))
             .send()
                 .map_err(|e| e.to_string())?
@@ -63,7 +62,7 @@ pub fn wget_tf(input: CharStream, options: &WgetOptions) -> Result<Response, Str
     };
 
     match resp.status() {
-        StatusCode::Ok => Ok(resp),
+        StatusCode::OK => Ok(resp),
         _ => Err(format!("Error: {}", resp.status()))
     }
 }
